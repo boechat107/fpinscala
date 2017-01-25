@@ -86,6 +86,7 @@ object List { // `List` companion object. Contains functions for creating and wo
   def length[A](l: List[A]): Int =
     foldRight(l, 0)((x, y) => 1 + y)
 
+  // Folders work like "reducers"; foldLeft works like Clojure's reduce.
   def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B =
     l match {
       case Nil => z
@@ -116,5 +117,58 @@ object List { // `List` companion object. Contains functions for creating and wo
   def append2[A](xs: List[A], ys: List[A]): List[A] =
     foldRight(xs, ys)((x, y) => Cons(x, y))
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = sys.error("todo")
+  def foldLeft2[A,B](l: List[A], z: B)(f: (B, A) => B): B =
+    foldRight(reverse(l), z)((x,y) => f(y,x))
+
+  // Concatenates a list of lists into a single list (exercise 15).
+  def concat[A](xss: List[List[A]]): List[A] =
+    foldLeft(xss, Nil: List[A])((x,y) => append(x, y))
+
+  def map[A,B](l: List[A])(f: A => B): List[B] =
+    l match {
+      case Nil => Nil
+      case Cons(x, xs) => Cons(f(x), map(xs)(f))
+    }
+
+  def filter[A](l: List[A])(f: A => Boolean): List[A] =
+    l match {
+      case Nil => Nil
+      case Cons(x, xs) => if (f(x)) Cons(x, filter(xs)(f))
+                          else filter(xs)(f)
+    }
+
+  def flatMap[A,B](l: List[A])(f: A => List[B]): List[B] =
+    l match {
+      case Nil => Nil
+      case Cons(x, xs) => append(f(x), flatMap(xs)(f))
+    }
+
+  def filter2[A](l: List[A])(f: A => Boolean): List[A] =
+    flatMap(l)(x => if (f(x)) List(x)
+                    else Nil)
+
+  // Exercise 23
+  def zip[A,B](l1: List[A], l2: List[A])(f: (A, A) => B): List[B] =
+    (l1, l2) match {
+      case (Nil, Nil) => Nil
+      case (Nil, _) => Nil
+      case (_, Nil) => Nil
+      case (Cons(x, xs), Cons(y, ys)) => Cons(f(x, y), zip(xs, ys)(f))
+    }
+
+  // Exercise 24
+
+  // Returns true if the first elements of l are the same of s.
+  def matchStart[A](l: List[A], s: List[A]): Boolean =
+    foldLeft(zip(l, s)(_ == _), true)(_ && _)
+
+  def hasSubsequence[A](l: List[A], sub: List[A]): Boolean =
+    (l, length(l) < length(sub)) match {
+      case (_, true) => false
+      case (Nil, false) => sub == Nil
+      case (Cons(x, xs), false) => if (matchStart(l, sub)) true
+                                   else hasSubsequence(xs, sub)
+      case _ => false
+    }
+
 }
