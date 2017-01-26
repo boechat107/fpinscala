@@ -50,6 +50,7 @@ object List { // `List` companion object. Contains functions for creating and wo
   def product2(ns: List[Double]) =
     foldRight(ns, 1.0)(_ * _) // `_ * _` is more concise notation for `(x,y) => x * y`; see sidebar
 
+  // ====== My solutions start here =====
 
   def tail[A](l: List[A]): List[A] =
     l match {

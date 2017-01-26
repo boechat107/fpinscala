@@ -1,4 +1,11 @@
-[![Build status](https://travis-ci.org/fpinscala/fpinscala.svg?branch=master)](https://travis-ci.org/fpinscala/fpinscala) [![Join the chat at https://gitter.im/fpinscala/fpinscala](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fpinscala/fpinscala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
+# My Solutions
+
+This is a fork of [fpinscala](https://github.com/fpinscala/fpinscala) containing
+my solutions to the exercises of the book.
+
+----
+
+[![Build status](https://travis-ci.org/fpinscala/fpinscala.svg?branch=master)](https://travis-ci.org/fpinscala/fpinscala) [![Join the chat at https://gitter.im/fpinscala/fpinscala](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/fpinscala/fpinscala?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 This repository contains exercises, hints, and answers for the book
 [Functional Programming in Scala](http://manning.com/bjarnason/). Along
@@ -96,4 +103,3 @@ wiki](https://github.com/fpinscala/fpinscala/wiki) for the **chapter
 notes**, links to more reading, and more.
 
 _Paul and Rúnar_
-
