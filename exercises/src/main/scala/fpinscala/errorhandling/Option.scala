@@ -59,11 +59,56 @@ object Option {
     else Some(xs.sum / xs.length)
 
   // ======= My code starts here =====
-  def variance(xs: Seq[Double]): Option[Double] = sys.error("todo")
+  def variance(xs: Seq[Double]): Option[Double] = {
+    // mean(xs) match {
+    //   case None => None
+    //   case Some(m) => Some(xs.map(x => math.pow(x - m, 2)).sum / xs.length)
+    // }
+    mean(xs).flatMap(m =>
+      Some(xs.map(x =>
+             math.pow(x - m, 2)).sum / xs.length))
+  }
 
-  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] = sys.error("todo")
+  def map2[A,B,C](a: Option[A], b: Option[B])(f: (A, B) => C): Option[C] =
+    for {
+      a <- a
+      b <- b
+    } yield f(a, b)
 
-  def sequence[A](a: List[Option[A]]): Option[List[A]] = sys.error("todo")
+  // Signature to be used to implement bothMatch_2 of exercise 4.
+  def mkMatcher(pat: String): Option[String => Boolean] = sys.error("todo")
 
-  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] = sys.error("todo")
+  def bothMatch_2(pat1: String, pat2: String, s: String): Option[Boolean] =
+    map2(mkMatcher(pat1), mkMatcher(pat2))((f, g) => f(s) && g(s))
+
+  def sequence[A](a: List[Option[A]]): Option[List[A]] =
+    // a match {
+    //   case Nil => Some(Nil)
+    //   case None :: xs => None
+    //   case Some(x) :: xs => sequence(xs) match {
+    //     case None => None
+    //     case Some(ys) => Some(x :: ys)
+    //   }
+    // }
+    a match {
+      case Nil => Some(Nil)
+        // case x :: xs => x.flatMap(h => sequence(xs).map(h :: _))
+      case x :: xs => for {
+        x <- x
+        xs <- sequence(xs)
+      } yield x :: xs
+    }
+
+  def traverse[A, B](a: List[A])(f: A => Option[B]): Option[List[B]] =
+    a match {
+      case Nil => Some(Nil)
+      case x :: xs => for {
+        y <- f(x)
+        ys <- traverse(xs)(f)
+      } yield y :: ys
+    }
+
+  // Rewritting sequence using traverse.
+  def sequence2[A](a: List[Option[A]]): Option[List[A]] =
+    traverse(a)(x => x)
 }
