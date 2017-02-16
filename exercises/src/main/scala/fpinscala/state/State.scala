@@ -61,7 +61,18 @@ object RNG {
     ((x1, x2, x3), rng4)
   }
 
-  def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
+  def ints(count: Int)(rng: RNG): (List[Int], RNG) = {
+    def recur(rrng: RNG, l: List[Int], c: Int): (List[Int], RNG) =
+      if (c > 0) {
+        val (x, nextRng) = rrng.nextInt
+        recur(nextRng, x :: l, c -1)
+      } else (l, rrng)
+    recur(rng, Nil, count)
+
+  }
+
+  def doubleByMap: Rand[Double] =
+    map(nonNegativeInt)(x => x.toDouble / Int.MaxValue)
 
   def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
 
