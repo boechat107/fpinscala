@@ -30,15 +30,36 @@ object RNG {
       (f(a), rng2)
     }
 
-  def nonNegativeInt(rng: RNG): (Int, RNG) = ???
+  // ==== My code starts here ====
+  def nonNegativeInt(rng: RNG): (Int, RNG) = {
+    val (x, rng2) = rng.nextInt
+    if (x >= 0) (x, rng2)
+    else (x - Int.MinValue, rng2)
+  }
 
-  def double(rng: RNG): (Double, RNG) = ???
+  def double(rng: RNG): (Double, RNG) = {
+    val (x, rng2) = nonNegativeInt(rng)
+    (x.toDouble / Int.MaxValue, rng2)
+  }
 
-  def intDouble(rng: RNG): ((Int,Double), RNG) = ???
+  def intDouble(rng: RNG): ((Int,Double), RNG) = {
+    val (xi, rng2) = rng.nextInt
+    val (xd, rng3) = double(rng2)
+    ((xi, xd), rng3)
+  }
 
-  def doubleInt(rng: RNG): ((Double,Int), RNG) = ???
+  def doubleInt(rng: RNG): ((Double,Int), RNG) = {
+    val (xd, rng2) = double(rng)
+    val (xi, rng3) = rng2.nextInt
+    ((xd, xi), rng3)
+  }
 
-  def double3(rng: RNG): ((Double,Double,Double), RNG) = ???
+  def double3(rng: RNG): ((Double,Double,Double), RNG) = {
+    val (x1, rng2) = double(rng)
+    val (x2, rng3) = double(rng2)
+    val (x3, rng4) = double(rng3)
+    ((x1, x2, x3), rng4)
+  }
 
   def ints(count: Int)(rng: RNG): (List[Int], RNG) = ???
 
