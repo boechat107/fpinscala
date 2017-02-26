@@ -74,11 +74,50 @@ object RNG {
   def doubleByMap: Rand[Double] =
     map(nonNegativeInt)(x => x.toDouble / Int.MaxValue)
 
-  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] = ???
+  def map2[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    rng => {
+      val (a, rng2) = ra(rng)
+      val (b, rng3) = rb(rng2)
+      (f(a, b), rng3)
+    }
 
-  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = ???
+  def sequence[A](fs: List[Rand[A]]): Rand[List[A]] = {
+    def recur(li: List[Rand[A]], lo: List[A], rng: RNG): (List[A], RNG) =
+      li match {
+        case Nil => (lo, rng)
+        case h :: t => {
+          val (x, nextRng) = h(rng)
+          recur(t, x :: lo, nextRng)
+        }
+      }
+    rng => recur(fs, Nil, rng)
+  }
 
-  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] = ???
+  def intsBySequence(count: Int)(rng: RNG): (List[Int], RNG) =
+    sequence(List.fill(count)(RNG.int)).apply(rng)
+
+  def flatMap[A,B](f: Rand[A])(g: A => Rand[B]): Rand[B] =
+    rng => {
+      val (a, rng2) = f(rng)
+      val fb = g(a)
+      fb(rng2)
+    }
+
+  def positiveLessThan(n: Int): Rand[Int] =
+    flatMap(nonNegativeInt){ i =>
+      val mod = i % n
+      if (i + (n-1) - mod > 0) rng => (mod, rng)
+      else positiveLessThan(n)
+    }
+
+  def mapByFlatm[A,B](s: Rand[A])(f: A => B): Rand[B] =
+    flatMap(s)(a => rng => (f(a), rng))
+
+  def map2ByFlatm[A,B,C](ra: Rand[A], rb: Rand[B])(f: (A, B) => C): Rand[C] =
+    flatMap(ra)(a => rng => {
+                  val (b, rng2) = rb(rng)
+                  (f(a, b), rng2)
+                })
 }
 
 case class State[S,+A](run: S => (A, S)) {
