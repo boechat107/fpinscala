@@ -122,11 +122,23 @@ object RNG {
 
 case class State[S,+A](run: S => (A, S)) {
   def map[B](f: A => B): State[S, B] =
-    sys.error("todo")
+    State(s => {
+            val (a, s2) = this.run(s)
+            (f(a), s2)
+          })
+
   def map2[B,C](sb: State[S, B])(f: (A, B) => C): State[S, C] =
-    sys.error("todo")
+    State(s => {
+            val (a, s2) = this.run(s)
+            val (b, s3) = sb.run(s2)
+            (f(a,b), s3)
+          })
+
   def flatMap[B](f: A => State[S, B]): State[S, B] =
-    sys.error("todo")
+    State(s => {
+            val (a, s2) = this.run(s)
+            f(a).run(s2)
+          })
 }
 
 sealed trait Input
