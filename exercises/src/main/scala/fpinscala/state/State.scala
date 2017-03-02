@@ -141,13 +141,56 @@ case class State[S,+A](run: S => (A, S)) {
           })
 }
 
+object State {
+  type Rand[A] = State[RNG, A]
+
+  def sequence[S,B](ls: List[State[S,B]]): State[S,List[B]] = {
+    def recur(li: List[State[S,B]], lo: List[B], s: S): (List[B], S) =
+      li match {
+        case Nil => (lo, s)
+        case h :: t => {
+          val (b, s2) = h.run(s)
+          recur(t, b :: lo, s2)
+        }
+      }
+    State(s => recur(ls, Nil, s))
+  }
+
+  def unit[S,A](a: A): State[S,A] = State(s => (a, s))
+
+  def get[S]: State[S,S] = State(s => (s, s))
+
+  def set[S](s: S): State[S,Unit] = State(_ => ((), s))
+
+  def modify[S](f: S => S): State[S,Unit] = for {
+    s <- get
+    _ <- set(f(s))
+  } yield ()
+}
+
 sealed trait Input
 case object Coin extends Input
 case object Turn extends Input
 
 case class Machine(locked: Boolean, candies: Int, coins: Int)
 
-object State {
-  type Rand[A] = State[RNG, A]
-  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] = ???
+object Machine {
+
+  def updateState(input: Input)(s: Machine): Machine =
+    (input, s) match {
+      case (_, Machine(_, 0, _)) => s
+      case (Coin, Machine(false, _, _)) => s
+      case (Turn, Machine(true, _, _)) => s
+      case (Coin, Machine(true, ca, co)) => Machine(false, ca, co+1)
+      case (Turn, Machine(false, ca, co)) => Machine(true, ca-1, co)
+    }
+
+  def simulateMachine(inputs: List[Input]): State[Machine, (Int, Int)] =
+    for {
+      ss <- State.sequence(
+        inputs.map(i => State.modify[Machine](updateState(i)))
+      )
+      // "get" is used as a function of a flatMap call.
+      s <- State.get
+    } yield (s.coins, s.candies)
 }
