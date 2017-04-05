@@ -59,6 +59,14 @@ object Par {
       }
     }
 
+  def parBinaryOp[A](s: IndexedSeq[A])(z: A, f: (A, A) => A): Par[A] =
+    if (s.size <= 1)
+      unit(s.headOption getOrElse z)
+    else {
+      val (l, r) = s.splitAt(s.length/2)
+      Par.map2(fork(parBinaryOp(l)(z, f)),
+               fork(parBinaryOp(r)(z, f)))(f)
+    }
 
   def equal[A](e: ExecutorService)(p: Par[A], p2: Par[A]): Boolean =
     p(e).get == p2(e).get
@@ -89,5 +97,19 @@ object Examples {
       val (l,r) = ints.splitAt(ints.length/2) // Divide the sequence in half using the `splitAt` function.
       sum(l) + sum(r) // Recursively sum both halves and add the results together.
     }
+
+  def binaryOp[A](s: IndexedSeq[A])(z: A, f: (A, A) => A): A =
+    if (s.size <= 1)
+      s.headOption getOrElse z
+    else {
+      val (l, r) = s.splitAt(s.length/2)
+      f(binaryOp(l)(z, f), binaryOp(r)(z, f))
+    }
+
+  def sumBinary(ints: IndexedSeq[Int]): Int =
+    binaryOp(ints)(0, _ + _)
+
+  def parSumBinary(ints: IndexedSeq[Int]): Par[Int] =
+    parBinaryOp(ints)(0, _ + _)
 
 }
