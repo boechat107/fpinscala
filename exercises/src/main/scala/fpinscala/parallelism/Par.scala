@@ -38,6 +38,13 @@ object Par {
   def map[A,B](pa: Par[A])(f: A => B): Par[B] =
     map2(pa, unit(()))((a,_) => f(a))
 
+  def flatMap[A,B](pa: Par[A])(f: A => Par[B]): Par[B] =
+    (es: ExecutorService) => {
+      val af = pa(es)
+      val bf = f(af.get)(es)
+      UnitFuture(bf.get)
+    }
+
   def sortPar(parList: Par[List[Int]]) = map(parList)(_.sorted)
 
   def sequence[A](ps: List[Par[A]]): Par[List[A]] =
@@ -111,5 +118,15 @@ object Examples {
 
   def parSumBinary(ints: IndexedSeq[Int]): Par[Int] =
     parBinaryOp(ints)(0, _ + _)
+
+  def parMax(ints: IndexedSeq[Int]): Par[Int] =
+    parBinaryOp(ints)(ints.headOption.getOrElse(0),
+                      (x, y) => if (x > y) x else y)
+
+  def wordCounter(ts: List[String]): Par[Int] = {
+    val pints: Par[List[Int]] = Par.parMap(ts)(t => t.split(' ').size)
+    Par.flatMap(pints)(l => parSumBinary(l.toIndexedSeq))
+  }
+
 
 }
