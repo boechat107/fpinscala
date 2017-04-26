@@ -44,6 +44,13 @@ object Par {
     map2(mab, pc)((fab, c) => fab(c))
   }
 
+  def map4[A,B,C,D,E](pa: Par[A], pb: Par[B], pc: Par[C], pd: Par[D])
+          (f: (A,B,C,D) => E):
+      Par[E] = {
+    val mabc = map3(pa, pb, pc)((a, b, c) => f.curried(a)(b)(c))
+    map2(mabc, pd)((fabc, d) => fabc(d))
+  }
+
 
   def flatMap[A,B](pa: Par[A])(f: A => Par[B]): Par[B] =
     (es: ExecutorService) => {
