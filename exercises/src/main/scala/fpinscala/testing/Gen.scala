@@ -50,6 +50,26 @@ object Gen {
     Gen(State.sequence(ls))
   }
 
+  def union[A](g1: Gen[A], g2: Gen[A]): Gen[A] = {
+    val genChoice = Gen.boolean
+    Gen(State(rng => {
+                val (c, rng2) = genChoice.sample.run(rng)
+                if (c) g1.sample.run(rng2)
+                else g2.sample.run(rng2)
+              }))
+  }
+
+  def weighted[A](g1: (Gen[A], Double), g2: (Gen[A], Double)): Gen[A] = {
+    // Value to normalize the probabilities into [0,1].
+    val totalProb = g1._2 + g2._2
+    Gen(State(rng => {
+                val (d, rng2) = RNG.double(rng)
+                // It's not completely fair, since d can be 1.
+                if (d < g1._2 / totalProb) g1._1.sample.run(rng2)
+                else g2._1.sample.run(rng2)
+              }))
+  }
+
 }
 
 case class Gen[A](sample: State[RNG,A]) {
