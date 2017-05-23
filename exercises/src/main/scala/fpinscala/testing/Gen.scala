@@ -28,7 +28,21 @@ case class Falsified(failure: FailedCase,
 
 case class Prop(run: (TestCases, RNG) => Result) {
   def check: Either[(FailedCase, SuccessCount), SuccessCount]
-  def &&(p: Prop): Prop
+
+  // TODO: how to know which one failed?
+  def &&(p: Prop): Prop = Prop {
+    (n, rng)  => this.run(n, rng) match {
+      case x: Falsified => x
+      case Passed => p.run(n, rng)
+    }
+  }
+
+  def ||(p: Prop): Prop = Prop {
+    (n, rng) => this.run(n, rng) match {
+      case Passed => Passed
+      case x: Falsified => p.run(n, rng)
+    }
+  }
 }
 
 object Prop {

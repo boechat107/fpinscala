@@ -13,3 +13,4 @@ project.vim
 .ensime
 
 .ensime_cache
+project/build.properties
