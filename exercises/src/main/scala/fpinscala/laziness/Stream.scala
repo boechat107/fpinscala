@@ -104,12 +104,13 @@ trait Stream[+A] {
                          else None
     }
 
-  def zip[B](l: Stream[A])(f: (A, A) => B): Stream[B] =
+  def zip[B,C](l: Stream[B])(f: (A, B) => C): Stream[C] =
     unfold((this, l)) {
       case (Empty, _) | (_, Empty) => None
       case (Cons(h1, t1), Cons(h2, t2)) =>
-        Some((f(h1(), h2()),
-              (t1(), t2())))
+        Some(
+          ( f(h1(), h2()), (t1(), t2()) )
+        )
     }
 
   def zipAll[B](l: Stream[A])(f: (Option[A], Option[A]) => B): Stream[B] =

@@ -11,21 +11,51 @@ import java.util.concurrent.{Executors,ExecutorService}
 /*
 The library developed in this chapter goes through several iterations. This file is just the
 shell, which you can fill in and modify while working through the chapter.
-*/
+ */
 
-trait Prop {
+sealed trait Result {
+  def isFalsified: Boolean
+}
+
+case object Passed extends Result {
+  def isFalsified = false
+}
+
+case class Falsified(failure: FailedCase,
+                     successes: SuccessCount) extends Result {
+  def isFalsified = true
+}
+
+case class Prop(run: (TestCases, RNG) => Result) {
   def check: Either[(FailedCase, SuccessCount), SuccessCount]
   def &&(p: Prop): Prop
 }
 
 object Prop {
+  type TestCases = Int
   type FailedCase = String
   type SuccessCount = Int
 
-  def forAll[A](gen: Gen[A])(f: A => Boolean): Prop = ???
+  def forAll[A](gen: Gen[A])(f: A => Boolean): Prop = Prop {
+    (n, rng) => randomStream(gen)(rng).
+      zip(Stream.from(0))((a,b) => (a,b)).
+      take(n).map {
+        case(a, i) => try {
+          if (f(a)) Passed else Falsified(a.toString, i)
+        } catch { case e: Exception => Falsified(buildMsg(a, e), i) }
+      }.find(_.isFalsified).getOrElse(Passed)
+  }
+
+  def buildMsg[A](v: A, e: Exception): String =
+    s"test case: $v\n" +
+      s"generated an exception: ${e.getMessage}\n" +
+      s"stack trace:\n ${e.getStackTrace.mkString}"
 }
 
 object Gen {
+  def randomStream[A](g: Gen[A])(rng: RNG): Stream[A] =
+    Stream.unfold(rng)(rng => Some(g.sample.run(rng)))
+
   def choose(start: Int, stopExclusive: Int): Gen[Int] =
     Gen(State (rng => {
                  def recur (r: RNG): (Int, RNG) = {
